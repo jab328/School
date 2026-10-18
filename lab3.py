@@ -30,14 +30,15 @@ def find_yield_index(strain, stress):
     if strain.ndim != 1 or stress.shape != strain.shape:
         raise ValueError("Strain and stress must be matching 1D arrays.")
     
-    # Dynamically adjust window limits to pass short autograder test arrays
-    window = min(80, len(strain))
-    step = min(40, max(1, window // 2))
+    # If the array is smaller than 80, scale the window down so we still get multiple 
+    # measurements to compare. Polyfit needs at least 2 points to draw a line.
+    window = 80 if len(strain) >= 80 else max(2, len(strain) // 4)
+    step = 40 if len(strain) >= 80 else max(1, window // 2)
     
     peak_slope = 0.0
     for start in range(0, len(strain) - window + 1, step):
         x, y = strain[start:start + window], stress[start:start + window]
-        if np.ptp(x) == 0:  # Universally safe flatline check to avoid division-by-zero
+        if np.ptp(x) == 0:  # Safe flatline check to avoid division-by-zero
             continue
             
         slope = np.polyfit(x, y, 1)[0]
@@ -46,7 +47,6 @@ def find_yield_index(strain, stress):
         peak_slope = max(peak_slope, slope)
         
     raise ValueError("No yield-related slope decline detected.")
-
 
 def find_elastic_modulus(strain, stress, yield_index):
     """Return the pre-yield least-squares slope in Pa, fitting an intercept."""
