@@ -1,0 +1,26 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Time vector from 0 to 2.5 seconds
+t = np.linspace(0, 2.5, 200)
+
+# Series elastic extension (max stretch C = 0.1 muscle lengths, rising with force)
+delta_L = 0.1 * (1 - np.exp(-t / 0.35))
+
+# L_ce starts at 0.7 and shortens; L_se starts at 0.3 and lengthens
+L_ce = 0.7 - delta_L
+L_se = 0.3 + delta_L
+
+plt.figure(figsize=(6, 4.5))
+plt.plot(t, L_ce, 'b-', linewidth=2.5, label='$L_{ce}$ (Contractile Element)')
+plt.plot(t, L_se, 'r--', linewidth=2.5, label='$L_{se}$ (Series Elastic Element)')
+
+plt.xlim(0, 2.5)
+plt.ylim(0.2, 0.8)
+plt.xlabel('Time (s)', fontweight='bold')
+plt.ylabel('Length (muscle lengths)', fontweight='bold')
+plt.title('Contractile and Series Element Lengths During Isometric Contraction')
+plt.legend(loc='center right')
+plt.grid(True, linestyle=':', alpha=0.6)
+plt.tight_layout()
+plt.show()

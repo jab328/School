@@ -1,0 +1,39 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the spatial domain (Displacement from X=0 in cm)
+x = np.linspace(-6, 6, 500)
+
+# Constants
+V_rest = -80
+V_peak = -40
+delta_V = V_peak - V_rest
+
+# Length constants (lambda) for the different axons
+lambda_myelin = 2.0  # Baseline: spreads furthest
+lambda_A = 0.8       # Axon A: unmyelinated, same diameter
+lambda_B = 0.4       # Axon B: unmyelinated, smaller diameter
+
+# Calculate membrane voltages using exponential spatial decay
+V_myelin = V_rest + delta_V * np.exp(-np.abs(x) / lambda_myelin)
+V_A = V_rest + delta_V * np.exp(-np.abs(x) / lambda_A)
+V_B = V_rest + delta_V * np.exp(-np.abs(x) / lambda_B)
+
+# Create the plot
+plt.figure(figsize=(10, 6))
+plt.plot(x, V_myelin, label='Baseline (Myelinated)', color='#3b82f6', linewidth=3)
+plt.plot(x, V_A, label='Axon A (Unmyelinated, Same Dia)', color='#10b981', linewidth=3)
+plt.plot(x, V_B, label='Axon B (Unmyelinated, Smaller Dia)', color='#ef4444', linewidth=3)
+
+# Formatting to mimic a clean, Desmos-style graph
+plt.title('Spatial Spread of Membrane Potential', fontsize=14)
+plt.xlabel('Displacement from X = 0 (cm)', fontsize=12)
+plt.ylabel('Vm (mV)', fontsize=12)
+plt.ylim(-90, -30)
+plt.xlim(-6, 6)
+plt.yticks(np.arange(-90, -20, 10))
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(loc='upper right', framealpha=1.0)
+
+# Display the plot
+plt.show()
