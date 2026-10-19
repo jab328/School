@@ -44,15 +44,23 @@ def find_yield_index(strain, stress):
     num_windows = (len(strain) - window_size) // window_shift + 1
     for window_index in range(num_windows):
         i = window_index * window_shift
-        current_slope = float(
-            np.polyfit(strain[i : i + window_size], stress[i : i + window_size], 1)[0]
-        )
+        x_win = strain[i : i + window_size]
+        y_win = stress[i : i + window_size]
+        
+        # Skip windows with zero variance to prevent SVD convergence failures
+        if np.ptp(x_win) == 0:
+            continue
+            
+        try:
+            current_slope = float(np.polyfit(x_win, y_win, 1)[0])
+        except np.linalg.LinAlgError:
+            continue
+            
         if window_index > 0 and current_slope < 0.95 * previous_slope:
             return i
         previous_slope = current_slope
         
     return len(strain) - 1
-    
 
 def find_elastic_modulus(strain, stress, yield_index):
     """Return the pre-yield least-squares slope in Pa, fitting an intercept."""
