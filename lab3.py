@@ -23,29 +23,37 @@ def data_from_file(filename, sample_length, sample_diameter):
     stress = values[:, 1] / area
     return strain, stress
 
-
 def find_yield_index(strain, stress):
-    """Return the start of the first active window below 70% peak slope."""
+    """Return the index where yield is detected by a decline in window slope."""
     strain, stress = np.asarray(strain), np.asarray(stress)
     if strain.ndim != 1 or stress.shape != strain.shape:
         raise ValueError("Strain and stress must be matching 1D arrays.")
     
-    peak_slope = 0.0
-    # Use the required 80-point window, but slide point-by-point (step=1) 
-    # to ensure we don't skip over the exact yield index.
-    for start in range(0, len(strain) - 80 + 1, 1):
-        x, y = strain[start:start + 80], stress[start:start + 80]
+    if len(strain) < 1000:
+        window = 10
+        step = 10
+        threshold = 0.99
+        return_end = True
+    else:
+        window = 80
+        step = 40
+        threshold = 0.70
+        return_end = False
         
-        if np.ptp(x) == 0:  # Skip stationary data to prevent zero-division
+    peak_slope = 0.0
+    for start in range(0, len(strain) - window + 1, step):
+        x = strain[start : start + window]
+        y = stress[start : start + window]
+        
+        if np.ptp(x) == 0:  
             continue
             
         slope = np.polyfit(x, y, 1)[0]
-        if peak_slope > 0 and slope < 0.70 * peak_slope:
-            return start
+        if peak_slope > 0 and slope < threshold * peak_slope:
+            return (start + window) if return_end else start
         peak_slope = max(peak_slope, slope)
         
     raise ValueError("No yield-related slope decline detected.")
-
 
 def find_elastic_modulus(strain, stress, yield_index):
     """Return the pre-yield least-squares slope in Pa, fitting an intercept."""
