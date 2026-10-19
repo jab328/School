@@ -24,36 +24,25 @@ def data_from_file(filename, sample_length, sample_diameter):
     return strain, stress
 
 def find_yield_index(strain, stress):
-    """Return the index where yield is detected by a decline in window slope."""
+    """Return the index where yield is detected using the Lab 3 protocol window rule."""
     strain, stress = np.asarray(strain), np.asarray(stress)
-    if strain.ndim != 1 or stress.shape != strain.shape:
-        raise ValueError("Strain and stress must be matching 1D arrays.")
     
-    if len(strain) < 1000:
-        window = 10
-        step = 10
-        threshold = 0.99
-        return_end = True
-    else:
-        window = 80
-        step = 40
-        threshold = 0.70
-        return_end = False
+    window_size = 50
+    window_shift = 10
+    previous_slope = 0.0
+    
+    num_windows = (len(strain) - window_size) // window_shift + 1
+    for window_index in range(num_windows):
+        i = window_index * window_shift
+        current_slope = float(
+            np.polyfit(strain[i : i + window_size], stress[i : i + window_size], 1)[0]
+        )
+        if window_index > 0 and current_slope < 0.95 * previous_slope:
+            return i
+        previous_slope = current_slope
         
-    peak_slope = 0.0
-    for start in range(0, len(strain) - window + 1, step):
-        x = strain[start : start + window]
-        y = stress[start : start + window]
-        
-        if np.ptp(x) == 0:  
-            continue
-            
-        slope = np.polyfit(x, y, 1)[0]
-        if peak_slope > 0 and slope < threshold * peak_slope:
-            return (start + window) if return_end else start
-        peak_slope = max(peak_slope, slope)
-        
-    raise ValueError("No yield-related slope decline detected.")
+    return len(strain) - 1
+    
 
 def find_elastic_modulus(strain, stress, yield_index):
     """Return the pre-yield least-squares slope in Pa, fitting an intercept."""
