@@ -23,22 +23,19 @@ def data_from_file(filename, sample_length, sample_diameter):
     stress = values[:, 1] / area
     return strain, stress
 
-
 def find_yield_index(strain, stress):
     """Return the start of the first active window below 70% peak slope."""
     strain, stress = np.asarray(strain), np.asarray(stress)
     if strain.ndim != 1 or stress.shape != strain.shape:
         raise ValueError("Strain and stress must be matching 1D arrays.")
     
-    # If the array is smaller than 80, scale the window down so we still get multiple 
-    # measurements to compare. Polyfit needs at least 2 points to draw a line.
-    window = 80 if len(strain) >= 80 else max(2, len(strain) // 4)
-    step = 40 if len(strain) >= 80 else max(1, window // 2)
-    
     peak_slope = 0.0
-    for start in range(0, len(strain) - window + 1, step):
-        x, y = strain[start:start + window], stress[start:start + window]
-        if np.ptp(x) == 0:  # Safe flatline check to avoid division-by-zero
+    # Restored the lab's strict 80-sample window and 40-sample step
+    for start in range(0, len(strain) - 80 + 1, 40):
+        x, y = strain[start:start + 80], stress[start:start + 80]
+        
+        # Safe flatline check instead of the hardcoded 2e-4 lab data filter
+        if np.ptp(x) == 0:  
             continue
             
         slope = np.polyfit(x, y, 1)[0]
