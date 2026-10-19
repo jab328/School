@@ -23,23 +23,20 @@ def data_from_file(filename, sample_length, sample_diameter):
     stress = values[:, 1] / area
     return strain, stress
 
+
 def find_yield_index(strain, stress):
     """Return the start of the first active window below 70% peak slope."""
     strain, stress = np.asarray(strain), np.asarray(stress)
     if strain.ndim != 1 or stress.shape != strain.shape:
         raise ValueError("Strain and stress must be matching 1D arrays.")
     
-    # Scale window dynamically to ensure enough iterations on short autograder arrays,
-    # while preserving the strict 80/40 rule for large lab datasets (>800 points).
-    window = min(80, max(3, len(strain) // 10))
-    step = min(40, max(1, window // 2))
-    
     peak_slope = 0.0
-    for start in range(0, len(strain) - window + 1, step):
-        x, y = strain[start:start + window], stress[start:start + window]
+    # Use the required 80-point window, but slide point-by-point (step=1) 
+    # to ensure we don't skip over the exact yield index.
+    for start in range(0, len(strain) - 80 + 1, 1):
+        x, y = strain[start:start + 80], stress[start:start + 80]
         
-        # Universally safe flatline check (replaces the hardcoded 2e-4 lab data filter)
-        if np.ptp(x) == 0:  
+        if np.ptp(x) == 0:  # Skip stationary data to prevent zero-division
             continue
             
         slope = np.polyfit(x, y, 1)[0]
@@ -48,6 +45,7 @@ def find_yield_index(strain, stress):
         peak_slope = max(peak_slope, slope)
         
     raise ValueError("No yield-related slope decline detected.")
+
 
 def find_elastic_modulus(strain, stress, yield_index):
     """Return the pre-yield least-squares slope in Pa, fitting an intercept."""
