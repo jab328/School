@@ -2,6 +2,16 @@
 
 Run: python lab3.py "junior's data.csv"
 """
+# ==============================================================================
+# AI Citations & Attribution:
+# Code drafted and debugged with Gemini (Google AI, accessed October 18, 2026).
+# Prompts: 
+#   - "Draft find_yield_index using the Lab 3 protocol windowing rule (window_size=50, 
+#      window_shift=10, 0.95 slope decline threshold)."
+#   - "Implement data_from_file to compute stress and strain from 5-column MTS data."
+# All code was reviewed, validated against experimental datasets, and verified
+# against course autograder requirements by Junior Bonet.
+# ==============================================================================
 
 import io
 import sys
